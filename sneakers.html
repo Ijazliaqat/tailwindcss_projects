@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOLE — Streetwear Sneakers</title>
+
+  <!-- Tailwind + GSAP (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
+
+  <!-- Bold display + sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Brand theme -->
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: { jet: '#0c0c0c', volt: '#d6ff2e', coal: '#161616' },
+        fontFamily: { display: ['Anton', 'sans-serif'], sans: ['Inter', 'sans-serif'] },
+      }},
+    };
+  </script>
+  <style>
+    body { background: #0c0c0c; }
+    .reveal { opacity: 0; transform: translateY(50px); }
+    .marquee { animation: marquee 18s linear infinite; }
+    @keyframes marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+    .outline-text { -webkit-text-stroke: 2px #d6ff2e; color: transparent; }
+
+    /* ===== Preloader ===== */
+    #preloader { position: fixed; inset: 0; z-index: 100; background: #0c0c0c; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+    .pl-cover { position: fixed; inset: 0; z-index: 99; background: #161616; transform: translateY(100%); }
+    #plCount { font-family: 'Anton', sans-serif; }
+    #plBarFill { width: 0%; }
+
+    /* ===== Kinetic heading masks ===== */
+    .line-mask { overflow: hidden; display: block; }
+    .char { display: inline-block; will-change: transform; }
+
+    /* ===== Film grain ===== */
+    #grain { position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: 0.06; width: 100%; height: 100%; }
+
+    /* ===== Ripple ===== */
+    .ripple-host { position: relative; overflow: hidden; }
+    .ripple { position: absolute; border-radius: 9999px; transform: scale(0); background: rgba(255,255,255,0.45); pointer-events: none; animation: ripple-go 0.6s ease-out forwards; }
+    @keyframes ripple-go { to { transform: scale(2.4); opacity: 0; } }
+
+    /* ===== Custom cursor (desktop only) ===== */
+    @media (pointer: fine) {
+      * { cursor: none !important; }
+      #cur-dot, #cur-ring { position: fixed; top: 0; left: 0; z-index: 120; pointer-events: none; mix-blend-mode: difference; border-radius: 9999px; transform: translate(-50%, -50%); }
+      #cur-dot { width: 8px; height: 8px; background: #fff; }
+      #cur-ring { width: 38px; height: 38px; border: 1.5px solid #d6ff2e; transition: width .25s ease, height .25s ease, background-color .25s ease; }
+      body.cursor-grow #cur-ring { width: 64px; height: 64px; background: rgba(214,255,46,0.12); }
+    }
+    @media (pointer: coarse) { #cur-dot, #cur-ring { display: none !important; } }
+
+    @media (prefers-reduced-motion: reduce){
+      .reveal{opacity:1;transform:none} *{animation:none!important}
+      #preloader, .pl-cover, #grain { display: none !important; }
+      .char { transform: none !important; }
+      #cur-dot, #cur-ring { display: none !important; }
+      * { cursor: auto !important; }
+    }
+  </style>
+</head>
+
+<body class="font-sans text-white antialiased selection:bg-volt selection:text-jet">
+
+  <!-- ===== Preloader ===== -->
+  <div class="pl-cover"></div>
+  <div id="preloader">
+    <div class="font-display text-6xl sm:text-7xl uppercase tracking-wide mb-8">SOLE<span class="text-volt">.</span></div>
+    <div class="w-64 max-w-[70vw]">
+      <div class="flex items-end justify-between mb-2">
+        <span class="text-white/40 text-xs uppercase tracking-widest">Loading</span>
+        <span id="plCount" class="text-volt text-2xl">0%</span>
+      </div>
+      <div class="h-[3px] w-full bg-white/10 overflow-hidden rounded-full">
+        <div id="plBarFill" class="h-full bg-volt rounded-full"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Film grain overlay ===== -->
+  <svg id="grain" xmlns="http://www.w3.org/2000/svg">
+    <filter id="grainNoise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch">
+        <animate attributeName="baseFrequency" dur="0.6s" values="0.85;0.78;0.85" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+    <rect width="100%" height="100%" filter="url(#grainNoise)"/>
+  </svg>
+
+  <!-- ===== Custom cursor ===== -->
+  <div id="cur-ring"></div>
+  <div id="cur-dot"></div>
+
+  <!-- ===== Navigation ===== -->
+  <header id="nav" class="fixed inset-x-0 top-0 z-50 transition-all duration-300">
+    <nav class="mx-auto max-w-7xl px-6 py-5 flex items-center justify-between">
+      <a href="#" class="font-display text-3xl tracking-wide">SOLE<span class="text-volt">.</span></a>
+      <ul class="hidden md:flex gap-8 text-sm font-medium uppercase tracking-wide">
+        <li><a href="#drops" class="hover:text-volt transition">Drops</a></li>
+        <li><a href="#shop" class="hover:text-volt transition">Men</a></li>
+        <li><a href="#shop" class="hover:text-volt transition">Women</a></li>
+        <li><a href="#shop" class="hover:text-volt transition">Sale</a></li>
+      </ul>
+      <button class="bg-volt text-jet font-semibold text-sm px-5 py-2.5 rounded-full hover:scale-105 transition">CART • 0</button>
+    </nav>
+  </header>
+
+  <!-- ===== Hero ===== -->
+  <section class="relative min-h-screen flex items-center overflow-hidden pt-24">
+    <!-- Background giant text -->
+    <h2 class="pointer-events-none absolute -bottom-6 left-0 right-0 text-center font-display text-[26vw] leading-none text-white/[0.04] select-none">FORCE</h2>
+
+    <div class="mx-auto max-w-7xl w-full px-6 grid lg:grid-cols-2 items-center gap-10">
+      <!-- Copy -->
+      <div>
+        <p class="inline-block bg-volt text-jet text-xs font-bold uppercase tracking-widest px-3 py-1 mb-6 reveal" data-r>New Drop — Live Now</p>
+        <h1 id="heroHeading" class="font-display text-6xl sm:text-7xl lg:text-8xl leading-[0.85] uppercase">
+          <span class="line-mask" data-line>Run the</span>
+          <span class="line-mask text-volt" data-line>streets</span>
+          <span class="line-mask outline-text" data-line>differently</span>
+        </h1>
+        <p class="mt-7 max-w-md text-white/60 reveal" data-r>
+          Limited-edition silhouettes engineered for the city. Bold by design, built to move.
+        </p>
+        <div class="mt-9 flex gap-4 reveal" data-r>
+          <a href="#shop" data-magnetic data-ripple class="ripple-host bg-volt text-jet font-bold uppercase text-sm px-8 py-4 rounded-full hover:scale-105 transition">Shop Now</a>
+          <a href="#drops" data-magnetic data-ripple class="ripple-host border border-white/25 font-bold uppercase text-sm px-8 py-4 rounded-full hover:border-volt hover:text-volt transition">View Drops</a>
+        </div>
+      </div>
+      <!-- Hero sneaker -->
+      <div class="relative">
+        <div class="absolute inset-0 m-auto h-72 w-72 rounded-full bg-volt/30 blur-3xl"></div>
+        <img id="heroShoe" src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80" alt="Sneaker" class="relative rounded-3xl rotate-[-8deg] reveal" data-r />
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Scrolling marquee ===== -->
+  <section class="bg-volt text-jet py-3 overflow-hidden -rotate-1">
+    <div class="flex w-max marquee gap-8 font-display text-2xl uppercase whitespace-nowrap">
+      <span>Free Returns ✦ Member Drops ✦ Express Shipping ✦ Authentic Guaranteed ✦</span>
+      <span>Free Returns ✦ Member Drops ✦ Express Shipping ✦ Authentic Guaranteed ✦</span>
+    </div>
+  </section>
+
+  <!-- ===== Featured products ===== -->
+  <section id="shop" class="py-24 px-6">
+    <div class="mx-auto max-w-7xl">
+      <div class="flex items-end justify-between mb-12">
+        <h2 class="font-display text-5xl sm:text-6xl uppercase reveal" data-r>Hot <span class="text-volt">Right Now</span></h2>
+        <a href="#" class="text-sm uppercase tracking-wide text-white/60 hover:text-volt transition reveal" data-r>All sneakers →</a>
+      </div>
+      <div id="grid" class="grid grid-cols-2 lg:grid-cols-4 gap-6"></div>
+    </div>
+  </section>
+
+  <!-- ===== Drop banner ===== -->
+  <section id="drops" class="px-6 pb-24">
+    <div class="mx-auto max-w-7xl relative overflow-hidden rounded-3xl bg-coal p-10 sm:p-16">
+      <div class="absolute -right-10 -top-10 h-60 w-60 rounded-full bg-volt/20 blur-3xl"></div>
+      <div class="relative reveal" data-r>
+        <p class="text-volt font-bold uppercase tracking-widest text-sm">Next Drop</p>
+        <h2 class="font-display text-4xl sm:text-6xl uppercase mt-3 max-w-2xl">Get early access to the Phantom series</h2>
+        <p class="mt-4 text-white/60 max-w-md">Members unlock drops 24h early. Join the crew — it's free.</p>
+        <button data-magnetic data-ripple class="ripple-host mt-7 bg-volt text-jet font-bold uppercase text-sm px-8 py-4 rounded-full hover:scale-105 transition">Become a member</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Footer ===== -->
+  <footer class="border-t border-white/10 px-6 py-14">
+    <div class="mx-auto max-w-7xl grid md:grid-cols-4 gap-10">
+      <div class="md:col-span-2">
+        <p class="font-display text-3xl">SOLE<span class="text-volt">.</span></p>
+        <p class="mt-3 text-white/50 max-w-xs text-sm">Streetwear sneakers for those who move different.</p>
+        <div class="flex gap-3 mt-5">
+          <a href="#" class="h-10 w-10 grid place-items-center rounded-full border border-white/15 hover:border-volt hover:text-volt transition">IG</a>
+          <a href="#" class="h-10 w-10 grid place-items-center rounded-full border border-white/15 hover:border-volt hover:text-volt transition">TT</a>
+          <a href="#" class="h-10 w-10 grid place-items-center rounded-full border border-white/15 hover:border-volt hover:text-volt transition">X</a>
+        </div>
+      </div>
+      <div>
+        <h4 class="uppercase text-xs tracking-widest text-white/50 mb-4">Shop</h4>
+        <ul class="space-y-2 text-sm text-white/80">
+          <li><a href="#" class="hover:text-volt">New Drops</a></li>
+          <li><a href="#" class="hover:text-volt">Best Sellers</a></li>
+          <li><a href="#" class="hover:text-volt">Sale</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="uppercase text-xs tracking-widest text-white/50 mb-4">Support</h4>
+        <ul class="space-y-2 text-sm text-white/80">
+          <li><a href="#" class="hover:text-volt">Shipping</a></li>
+          <li><a href="#" class="hover:text-volt">Returns</a></li>
+          <li><a href="#" class="hover:text-volt">Size Guide</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="mx-auto max-w-7xl mt-12 pt-6 border-t border-white/10 text-white/40 text-xs">© 2026 SOLE. All rights reserved.</p>
+  </footer>
+
+  <!-- ===== Scripts ===== -->
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    gsap.registerPlugin(ScrollTrigger);
+
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const finePointer = window.matchMedia('(pointer:fine)').matches;
+
+    // ===== Lenis smooth scroll (guarded) =====
+    let lenis;
+    try {
+      if (!prefersReduced && typeof window.Lenis === 'function') {
+        lenis = new Lenis({ duration: 1.1, easing: (t)=>Math.min(1,1.001-Math.pow(2,-10*t)) });
+        if (typeof lenis.raf === 'function') {
+          lenis.on('scroll', ScrollTrigger.update);
+          gsap.ticker.add((time)=>{ try { lenis.raf(time*1000); } catch(_){} });
+          gsap.ticker.lagSmoothing(0);
+        } else { lenis = null; }
+      }
+    } catch(_) { lenis = null; }
+
+    // Product data
+    const products = [
+      { name: 'Phantom Low',   price: 149, tag: 'NEW',  img: 'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?auto=format&fit=crop&w=600&q=80' },
+      { name: 'Volt Runner',   price: 179, tag: 'HOT',  img: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=600&q=80' },
+      { name: 'Street Force',  price: 159, tag: null,   img: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?auto=format&fit=crop&w=600&q=80' },
+      { name: 'Court Classic', price: 129, tag: 'SALE', img: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=600&q=80' },
+      { name: 'Air Glide',     price: 189, tag: null,   img: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=600&q=80' },
+      { name: 'Retro 90',      price: 139, tag: 'NEW',  img: 'https://images.unsplash.com/photo-1597248881519-db089d3744a5?auto=format&fit=crop&w=600&q=80' },
+      { name: 'Mono Slip',     price: 109, tag: null,   img: 'https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?auto=format&fit=crop&w=600&q=80' },
+      { name: 'Trail Boost',   price: 199, tag: 'HOT',  img: 'https://images.unsplash.com/photo-1605408499391-6368c628ef42?auto=format&fit=crop&w=600&q=80' },
+    ];
+
+    // Render product cards
+    document.getElementById('grid').innerHTML = products.map(p => `
+      <article class="reveal group bg-coal rounded-2xl p-4 hover:-translate-y-2 transition-transform duration-300" data-r>
+        <div class="relative overflow-hidden rounded-xl bg-jet">
+          ${p.tag ? `<span class="absolute top-2 left-2 z-10 bg-volt text-jet text-[10px] font-bold px-2 py-1 rounded">${p.tag}</span>` : ''}
+          <img src="${p.img}" alt="${p.name}" loading="lazy" class="h-44 w-full object-cover transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3" />
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+          <div>
+            <h3 class="font-semibold">${p.name}</h3>
+            <p class="text-white/50 text-sm">$${p.price}</p>
+          </div>
+          <button data-add data-ripple class="ripple-host h-9 w-9 grid place-items-center rounded-full bg-volt text-jet font-bold hover:scale-110 transition">+</button>
+        </div>
+      </article>`).join('');
+
+    // Scroll reveals
+    gsap.utils.toArray('[data-r]').forEach(el => {
+      gsap.to(el, { y: 0, opacity: 1, duration: 0.9, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 90%' } });
+    });
+
+    // Hero sneaker float + scroll spin
+    gsap.to('#heroShoe', { y: -18, rotate: -4, duration: 3, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+    gsap.to('#heroShoe', { rotate: 6, ease: 'none',
+      scrollTrigger: { trigger: 'section', start: 'top top', end: 'bottom top', scrub: true } });
+
+    // Navbar background on scroll
+    const nav = document.getElementById('nav');
+    addEventListener('scroll', () => {
+      const on = scrollY > 40;
+      nav.classList.toggle('bg-jet/80', on);
+      nav.classList.toggle('backdrop-blur', on);
+    }, { passive: true });
+
+    // ===== Kinetic hero heading (split into chars, build paused) =====
+    let heroTl = null;
+    const heading = document.getElementById('heroHeading');
+    if (heading && !prefersReduced) {
+      heading.querySelectorAll('[data-line]').forEach(line => {
+        const text = line.textContent;
+        line.textContent = '';
+        [...text].forEach(ch => {
+          const span = document.createElement('span');
+          span.className = 'char';
+          span.textContent = ch === ' ' ? ' ' : ch;
+          line.appendChild(span);
+        });
+      });
+      const chars = heading.querySelectorAll('.char');
+      gsap.set(chars, { yPercent: 120 });
+      heroTl = gsap.timeline({ paused: true });
+      heroTl.to(chars, { yPercent: 0, duration: 0.9, ease: 'power4.out', stagger: 0.022 });
+    }
+
+    // ===== Preloader / intro =====
+    const preloader = document.getElementById('preloader');
+    const plCover = document.querySelector('.pl-cover');
+    const plCount = document.getElementById('plCount');
+    const plBar = document.getElementById('plBarFill');
+
+    if (lenis && typeof lenis.stop === 'function') { try { lenis.stop(); } catch(_){} }
+    document.body.style.overflow = 'hidden';
+
+    let introDone = false;
+    function finishIntro() {
+      if (introDone) return;
+      introDone = true;
+      document.body.style.overflow = '';
+      if (lenis && typeof lenis.start === 'function') { try { lenis.start(); } catch(_){} }
+      if (heroTl) heroTl.play();
+      ScrollTrigger.refresh();
+    }
+    function forceReveal() {
+      introDone = true;
+      if (preloader) preloader.style.display = 'none';
+      if (plCover) plCover.style.display = 'none';
+      document.body.style.overflow = '';
+      gsap.utils.toArray('[data-r], .reveal').forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
+      const ch = document.querySelectorAll('.char');
+      ch.forEach(c => { c.style.transform = 'none'; });
+      if (lenis && typeof lenis.start === 'function') { try { lenis.start(); } catch(_){} }
+    }
+    // Hard failsafe — page can NEVER stay blank
+    setTimeout(forceReveal, 4000);
+
+    if (prefersReduced) {
+      if (preloader) preloader.style.display = 'none';
+      if (plCover) plCover.style.display = 'none';
+      document.body.style.overflow = '';
+      finishIntro();
+    } else {
+      const counter = { v: 0 };
+      const introTl = gsap.timeline({
+        onComplete: finishIntro
+      });
+      introTl
+        .to(counter, {
+          v: 100, duration: 1.6, ease: 'power2.inOut',
+          onUpdate: () => {
+            const val = Math.round(counter.v);
+            if (plCount) plCount.textContent = val + '%';
+            if (plBar) plBar.style.width = val + '%';
+          }
+        })
+        .to('#preloader', { yPercent: -100, duration: 0.8, ease: 'power4.inOut' }, '+=0.15')
+        .to('.pl-cover', { yPercent: -100, duration: 0.8, ease: 'power4.inOut' }, '<0.12')
+        .set('#preloader', { display: 'none' })
+        .set('.pl-cover', { display: 'none' });
+    }
+
+    // ===== Custom cursor (desktop only) =====
+    if (finePointer && !prefersReduced) {
+      const dot = document.getElementById('cur-dot');
+      const ring = document.getElementById('cur-ring');
+      let mx = window.innerWidth/2, my = window.innerHeight/2;
+      let rx = mx, ry = my;
+      window.addEventListener('mousemove', (e) => {
+        mx = e.clientX; my = e.clientY;
+        if (dot) { dot.style.left = mx+'px'; dot.style.top = my+'px'; }
+      });
+      function ringLoop() {
+        rx += (mx - rx) * 0.18;
+        ry += (my - ry) * 0.18;
+        if (ring) { ring.style.left = rx+'px'; ring.style.top = ry+'px'; }
+        requestAnimationFrame(ringLoop);
+      }
+      requestAnimationFrame(ringLoop);
+      // Delegated hover grow (covers dynamic product cards)
+      const growSel = 'a, button, .group, input';
+      document.addEventListener('mouseover', (e) => {
+        if (e.target.closest(growSel)) document.body.classList.add('cursor-grow');
+      });
+      document.addEventListener('mouseout', (e) => {
+        if (e.target.closest(growSel)) document.body.classList.remove('cursor-grow');
+      });
+    }
+
+    // ===== Ripple micro-interaction =====
+    if (!prefersReduced && finePointer) {
+      document.addEventListener('pointerdown', (e) => {
+        const host = e.target.closest('[data-ripple]');
+        if (!host) return;
+        const rect = host.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const r = document.createElement('span');
+        r.className = 'ripple';
+        r.style.width = r.style.height = size + 'px';
+        r.style.left = (e.clientX - rect.left - size/2) + 'px';
+        r.style.top = (e.clientY - rect.top - size/2) + 'px';
+        host.appendChild(r);
+        setTimeout(() => r.remove(), 650);
+      });
+    }
+
+    // ===== Product "+" pop on click (delegated) =====
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-add]');
+      if (!btn) return;
+      if (prefersReduced) return;
+      gsap.fromTo(btn, { scale: 0.8 }, { scale: 1, duration: 0.5, ease: 'elastic.out(1.2, 0.4)' });
+    });
+
+    // ===== Magnetic CTAs =====
+    if (finePointer && !prefersReduced) {
+      document.querySelectorAll('[data-magnetic]').forEach(el => {
+        el.addEventListener('mousemove', (e) => {
+          const rect = el.getBoundingClientRect();
+          const x = e.clientX - rect.left - rect.width/2;
+          const y = e.clientY - rect.top - rect.height/2;
+          gsap.to(el, { x: x * 0.35, y: y * 0.35, duration: 0.3, ease: 'power3.out' });
+        });
+        el.addEventListener('mouseleave', () => {
+          gsap.to(el, { x: 0, y: 0, duration: 0.5, ease: 'elastic.out(1, 0.4)' });
+        });
+      });
+    }
+  });
+  </script>
+</body>
+</html>
