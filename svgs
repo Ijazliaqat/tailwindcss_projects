@@ -1,0 +1,69 @@
+index.html
+
+  1. Cart
+  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6h15l-1.5 
+  9h-12z"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M6 6 5 3H2"/></svg>
+  
+  2. Arrow Right (used twice — nav/CTA)
+  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 
+  6l6 6-6 6"/></svg>
+  
+  3. Star (rating) (static, ×5)
+  <svg class="h-4 w-4" viewBox="0 0 24 24"><path class="star" d="M12 2l3 6.3 6.9 1-5 4.8 1.2 6.9L12 17.8 5.9 
+  21l1.2-6.9-5-4.8 6.9-1z"/></svg>
+  
+  4. Truck / Delivery (used twice — small + large)
+  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 
+  7h13v8H3zM16 10h4l1 3v2h-5z"/><circle cx="7" cy="17" r="1.5"/><circle cx="18" cy="17" r="1.5"/></svg>
+  
+  5. Shield + Check (warranty)
+  <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v6c0 
+  4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+
+  6. Return / Refresh
+  <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 
+  8.5 0 1 1-4-7.2L21 3v6h-6"/></svg>
+
+  7. Checkmark
+  <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19
+  7"/></svg>
+
+  8. X (Twitter) logo
+  <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.9 1.2h3.7l-8 9.2 9.5 
+  12.6h-7.5l-5.8-7.6-6.7 7.6H.4l8.6-9.8L0 1.2h7.7l5.3 7zM17.6 21h2L6.5 3.3H4.3z"/></svg>
+  
+  9. Instagram logo
+  <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" 
+  width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+
+  10. YouTube logo
+  <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23 7.5a3 3 0 0 0-2.1-2.1C19 5 12 5 12 5s-7 
+  0-8.9.4A3 3 0 0 0 1 7.5 31 31 0 0 0 .6 12 31 31 0 0 0 1 16.5a3 3 0 0 0 2.1 2.1C5 19 12 19 12 19s7 0 8.9-.4a3 3 0 0 
+  0 2.1-2.1 31 31 0 0 0 .4-4.5 31 31 0 0 0-.4-4.5zM9.8 15.3V8.7l5.7 3.3z"/></svg>
+  
+  11. Star (JS-templated, dynamic color)
+  <svg class="h-4 w-4 ${i < n ? 'text-gold' : 'text-white/15'}" viewBox="0 0 24 24"><path class="star" d="M12 2l3 6.3
+  6.9 1-5 4.8 1.2 6.9L12 17.8 5.9 21l1.2-6.9-5-4.8 6.9-1z"/></svg>
+
+  12. Heart / Wishlist
+  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 
+  21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>
+
+  13. Plus
+  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 
+  12h14"/></svg>
+  
+  ▎ Note: index.html's film grain is not an SVG — it's <div id="grain"> styled with CSS.
+
+  sneakers.html & furniture.html
+
+  14. Animated Film Grain (identical in both files)
+  <svg id="grain" xmlns="http://www.w3.org/2000/svg">
+    <filter id="grainNoise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch">
+        <animate attributeName="baseFrequency" dur="0.6s" values="0.85;0.78;0.85" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+    <rect width="100%" height="100%" filter="url(#grainNoise)"/>
+  </svg>
